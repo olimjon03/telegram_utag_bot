@@ -1,5 +1,6 @@
 from telethon import TelegramClient, events
 from telethon.tl.types import ChannelParticipantsAdmins
+from telethon.sessions import StringSession
 import asyncio
 import random
 import os
@@ -10,10 +11,18 @@ print("🚀 STARTING BOT...")
 # 🔐 ENV
 api_id = int(os.environ.get("API_ID"))
 api_hash = os.environ.get("API_HASH")
+session_str = os.environ.get("SESSION")
 
 OWNER_ID = 2025167583
 
-client = TelegramClient("./session", api_id, api_hash)
+# ✅ CLIENT (Railway uchun optimal)
+client = TelegramClient(
+    StringSession(session_str),
+    api_id,
+    api_hash,
+    auto_reconnect=True,
+    connection_retries=None
+)
 
 running = False
 
@@ -31,13 +40,9 @@ def get_ai_text():
         "😕 nima ish qilib qo‘ydiz",
         "😅 chuchvara yeysizmi",
         "👀 Tojiboev sizni chaqiryapti",
-        "🌚 utag qilganim uchun nechta almas berasiz?",
         "🎮 o‘yin boshlanyapti join bo‘ling",
         "👀 tez kelsayz almas beraman",
-        "🌚 mandarinni po‘chog‘i",
         "😡 kelmasayz tepaman",
-
-        # 🔥 YANGI KULGILI
         "🤣 admin ko‘ryapti tez yoz",
         "😳 bu yerda nima gap bo‘lyapti",
         "👀 sizni qidirishyapti",
@@ -48,32 +53,28 @@ def get_ai_text():
         "😎 VIP mehmon keldi",
         "🤨 sizni kimdir eslayapti",
         "👻 ruhlar sizni chaqiryapti",
-        "😂 ketib qolyapsizmi yoq qochib qolyapsizmi",
         "😅 hozir kelmasayz ban 😜",
-        "👀 sirli o‘yin boshlandi",
         "💀 kech qolsangiz pushaymon bo‘lasiz",
         "😏 sizsiz boshlamaymiz",
         "🤣 qochma baribir topamiz",
         "👀 sizni kuzatib turibmiz",
-        "😈 bugun sizga omad yo‘q shekilli",
         "🔥 tez keling drama bor",
         "🥸 maxfiy chaqiruv",
-        "😜 kelmasayz screenshot bor",
-        "👀 sizni tag qilishdi, reaction qani",
-        "😂 telefonni tashlab qochmang",
-        "😎 bu imkoniyat faqat siz uchun",
-        "💣 hozir boshlanadi tayyor turing",
     ])
 
 # 🔒 OWNER CHECK
 def is_owner(event):
     return event.sender_id == OWNER_ID
 
-# ▶️ START
-@client.on(events.NewMessage(pattern="\\.r"))
+# ▶️ START (.r)
+@client.on(events.NewMessage(pattern=r"\.r"))
 async def start(event):
     global running
+
     if not is_owner(event):
+        return
+
+    if running:
         return
 
     running = True
@@ -86,12 +87,12 @@ async def start(event):
     chat = await event.get_chat()
 
     # 👮 ADMINLAR
-    admins = []
+    admins = set()
     async for user in client.iter_participants(chat, filter=ChannelParticipantsAdmins):
-        admins.append(user.id)
+        admins.add(user.id)
 
     me = await client.get_me()
-    admins.append(me.id)
+    admins.add(me.id)
 
     # ⏱ 5 minut
     now = datetime.now(timezone.utc)
@@ -112,38 +113,35 @@ async def start(event):
         else:
             fallback_users.add(msg.sender_id)
 
-    active_users = list(active_users)
-    fallback_users = list(fallback_users)
+    users_pool = list(active_users) if active_users else list(fallback_users)
 
-    print(f"🔥 Active: {len(active_users)} | Fallback: {len(fallback_users)}")
+    if not users_pool:
+        print("⚠️ Userlar topilmadi")
+        running = False
+        return
 
-    used_users = set()
-    count = 0
-    LIMIT = 30
+    random.shuffle(users_pool)
 
-    while running and count < LIMIT:
-        if active_users:
-            user_id = random.choice(active_users)
-        elif fallback_users:
-            user_id = random.choice(fallback_users)
-        else:
-            print("⚠️ Userlar tugadi")
+    LIMIT = min(30, len(users_pool))
+
+    print(f"🔥 Ishlayapti | {LIMIT} ta user")
+
+    for i in range(LIMIT):
+        if not running:
             break
 
-        if user_id in used_users:
-            continue
-
-        used_users.add(user_id)
+        user_id = users_pool[i]
 
         try:
             user = await client.get_entity(user_id)
+            name = user.first_name or "User"
 
             await client.send_message(
                 chat,
-                f"[{user.first_name}](tg://user?id={user.id}) {get_ai_text()}"
+                f"[{name}](tg://user?id={user.id}) {get_ai_text()}",
+                parse_mode="md"
             )
 
-            count += 1
         except Exception as e:
             print("❌ Xatolik:", e)
 
@@ -152,10 +150,11 @@ async def start(event):
     running = False
     print("✅ Tugadi")
 
-# ⏹ STOP
-@client.on(events.NewMessage(pattern="\\.t"))
+# ⏹ STOP (.t)
+@client.on(events.NewMessage(pattern=r"\.t"))
 async def stop(event):
     global running
+
     if not is_owner(event):
         return
 
@@ -168,5 +167,9 @@ async def stop(event):
 
 print("✅ Bot ishga tushdi...")
 
-client.connect()
-client.run_until_disconnected()
+# 🚀 RUN
+async def main():
+    await client.start()
+    await client.run_until_disconnected()
+
+asyncio.run(main())
