@@ -168,5 +168,5 @@ async def stop(event):
 
 print("✅ Bot ishga tushdi...")
 
-client.start()
+client.connect()
 client.run_until_disconnected()
