@@ -3,68 +3,73 @@ from telethon.tl.types import ChannelParticipantsAdmins
 import asyncio
 import random
 import os
+from datetime import datetime, timedelta, timezone
 
 print("🚀 STARTING BOT...")
 
-# 🔐 ENV (Railway Variables)
+# 🔐 ENV
 api_id = int(os.environ.get("API_ID"))
 api_hash = os.environ.get("API_HASH")
 
-# 👤 OWNER ID
 OWNER_ID = 2025167583
 
-# 🔥 session path
 client = TelegramClient("./session", api_id, api_hash)
 
 running = False
 
-# 🔥 RANDOM TEXT
+# 😂 RANDOM TEXT
 def get_ai_text():
-    mafia_words = [
-        "Mafia", "Boss", "Don", "O‘yin", "Kecha", "Jang",
-        "Sir", "Qorong‘u", "Shahar", "Tungi o‘yin", "Agent", "Killer"
-    ]
+    return random.choice([
+        "🔥 o‘yin boshlanadi",
+        "😈 sen tanlanding",
+        "😂 qochma",
+        "👀 kuzatyapmiz",
+        "💣 bugun qiziq bo‘ladi",
+        "🌚 snikers olib berimi",
+        "👀 bittasi chaqiryapti sizni",
+        "🥸 byax kelingchi tez",
+        "😕 nima ish qilib qo‘ydiz",
+        "😅 chuchvara yeysizmi",
+        "👀 Tojiboev sizni chaqiryapti",
+        "🌚 utag qilganim uchun nechta almas berasiz?",
+        "🎮 o‘yin boshlanyapti join bo‘ling",
+        "👀 tez kelsayz almas beraman",
+        "🌚 mandarinni po‘chog‘i",
+        "😡 kelmasayz tepaman",
 
-    actions = [
-        "boshlanadi", "kutmoqda", "seni chaqiryapti", "qizib ketdi",
-        "start oldi", "yashirin ketmoqda", "kuchaymoqda",
-        "davom etyapti", "tayyor", "portlaydi"
-    ]
-
-    fun_words = [
-        "😂", "😈", "🔥", "😎", "👀", "💣",
-        "🎭", "🤣", "😜", "🕵️"
-    ]
-
-    phrases = [
-        "tez qo‘shil", "qochma", "bugun omad sendami",
-        "sen tanlanding", "kuzatyapmiz", "ushlab oldik",
-        "navbat senda", "o‘yin kutyapti",
-        "barchasi boshlanadi", "qiziq bo‘ladi",
-        "oxirgi imkoniyat", "hamma kutyapti"
-    ]
-
-    templates = [
-        "{emoji} {mafia} {action}",
-        "{emoji} {phrase}",
-        "{emoji} {mafia} {phrase}",
-        "{emoji} {mafia} {action}, {phrase}",
-        "{emoji} Bugun {mafia} {action}",
-        "{emoji} {phrase}, {mafia} {action}",
-    ]
-
-    return random.choice(templates).format(
-        emoji=random.choice(fun_words),
-        mafia=random.choice(mafia_words),
-        action=random.choice(actions),
-        phrase=random.choice(phrases)
-    )
+        # 🔥 YANGI KULGILI
+        "🤣 admin ko‘ryapti tez yoz",
+        "😳 bu yerda nima gap bo‘lyapti",
+        "👀 sizni qidirishyapti",
+        "😂 yashirinish befoyda",
+        "😈 bugun siz navbatdasiz",
+        "🔥 gap bor tez keling",
+        "🥲 kelmasayz xafa bo‘laman",
+        "😎 VIP mehmon keldi",
+        "🤨 sizni kimdir eslayapti",
+        "👻 ruhlar sizni chaqiryapti",
+        "😂 ketib qolyapsizmi yoq qochib qolyapsizmi",
+        "😅 hozir kelmasayz ban 😜",
+        "👀 sirli o‘yin boshlandi",
+        "💀 kech qolsangiz pushaymon bo‘lasiz",
+        "😏 sizsiz boshlamaymiz",
+        "🤣 qochma baribir topamiz",
+        "👀 sizni kuzatib turibmiz",
+        "😈 bugun sizga omad yo‘q shekilli",
+        "🔥 tez keling drama bor",
+        "🥸 maxfiy chaqiruv",
+        "😜 kelmasayz screenshot bor",
+        "👀 sizni tag qilishdi, reaction qani",
+        "😂 telefonni tashlab qochmang",
+        "😎 bu imkoniyat faqat siz uchun",
+        "💣 hozir boshlanadi tayyor turing",
+    ])
 
 # 🔒 OWNER CHECK
 def is_owner(event):
     return event.sender_id == OWNER_ID
 
-# ▶️ START (.r)
+# ▶️ START
 @client.on(events.NewMessage(pattern="\\.r"))
 async def start(event):
     global running
@@ -88,34 +93,54 @@ async def start(event):
     me = await client.get_me()
     admins.append(me.id)
 
-    # 🎯 ACTIVE USERLAR
+    # ⏱ 5 minut
+    now = datetime.now(timezone.utc)
+    five_min_ago = now - timedelta(minutes=5)
+
     active_users = set()
-    async for msg in client.iter_messages(chat, limit=150):
-        if msg.sender_id and msg.sender_id not in admins:
+    fallback_users = set()
+
+    async for msg in client.iter_messages(chat, limit=500):
+        if not msg.date or not msg.sender_id:
+            continue
+
+        if msg.sender_id in admins:
+            continue
+
+        if msg.date >= five_min_ago:
             active_users.add(msg.sender_id)
+        else:
+            fallback_users.add(msg.sender_id)
 
     active_users = list(active_users)
+    fallback_users = list(fallback_users)
 
+    print(f"🔥 Active: {len(active_users)} | Fallback: {len(fallback_users)}")
+
+    used_users = set()
     count = 0
     LIMIT = 30
 
-    # 🔥 SHUFFLE qilib yuboramiz (random + takrorlanmaydi)
-    random.shuffle(active_users)
-
     while running and count < LIMIT:
-        if not active_users:
+        if active_users:
+            user_id = random.choice(active_users)
+        elif fallback_users:
+            user_id = random.choice(fallback_users)
+        else:
+            print("⚠️ Userlar tugadi")
             break
 
-        # 🔥 endi har user faqat 1 marta olinadi
-        user_id = active_users.pop()
+        if user_id in used_users:
+            continue
+
+        used_users.add(user_id)
 
         try:
             user = await client.get_entity(user_id)
-            text = get_ai_text()
 
             await client.send_message(
                 chat,
-                f"[{user.first_name}](tg://user?id={user.id}) {text}"
+                f"[{user.first_name}](tg://user?id={user.id}) {get_ai_text()}"
             )
 
             count += 1
@@ -125,8 +150,9 @@ async def start(event):
         await asyncio.sleep(random.uniform(1.0, 1.5))
 
     running = False
+    print("✅ Tugadi")
 
-# ⏹️ STOP (.t)
+# ⏹ STOP
 @client.on(events.NewMessage(pattern="\\.t"))
 async def stop(event):
     global running
@@ -140,7 +166,6 @@ async def stop(event):
     except:
         pass
 
-# 🚀 RUN
 print("✅ Bot ishga tushdi...")
 
 client.start()
