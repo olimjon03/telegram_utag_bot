@@ -107,7 +107,7 @@ async def start(event):
     active_users = set()
     fallback_users = set()
 
-    async for msg in client.iter_messages(chat, limit=300):
+    async for msg in client.iter_messages(chat, limit=2500):
         if not msg.sender_id or msg.sender_id in admins:
             continue
 
@@ -148,7 +148,7 @@ async def start(event):
             print(f"✅ {name}")
 
             # ⚡ TEZLIK
-            await asyncio.sleep(random.uniform(1.5, 2.5))
+            await asyncio.sleep(random.uniform(2, 2.5))
 
             # 😴 HAR 10 USERDAN KEYIN (MAX 10s)
             if i % 10 == 9:
