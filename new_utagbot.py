@@ -13,7 +13,7 @@ api_hash = os.environ.get("API_HASH")
 # 👤 OWNER ID
 OWNER_ID = 2025167583
 
-# 🔥 MUHIM: session path to‘g‘rilandi
+# 🔥 session path
 client = TelegramClient("./session", api_id, api_hash)
 
 running = False
@@ -99,11 +99,15 @@ async def start(event):
     count = 0
     LIMIT = 30
 
+    # 🔥 SHUFFLE qilib yuboramiz (random + takrorlanmaydi)
+    random.shuffle(active_users)
+
     while running and count < LIMIT:
         if not active_users:
             break
 
-        user_id = random.choice(active_users)
+        # 🔥 endi har user faqat 1 marta olinadi
+        user_id = active_users.pop()
 
         try:
             user = await client.get_entity(user_id)
