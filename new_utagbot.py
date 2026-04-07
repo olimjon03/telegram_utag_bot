@@ -102,12 +102,12 @@ async def start(event):
 
     # ⏱ Aktiv userlar
     now = datetime.now(timezone.utc)
-    five_min_ago = now - timedelta(minutes=5)
+    five_min_ago = now - timedelta(minutes=20)
 
     active_users = set()
     fallback_users = set()
 
-    async for msg in client.iter_messages(chat, limit=2500):
+    async for msg in client.iter_messages(chat, limit=4000):
         if not msg.sender_id or msg.sender_id in admins:
             continue
 
@@ -148,7 +148,7 @@ async def start(event):
             print(f"✅ {name}")
 
             # ⚡ TEZLIK
-            await asyncio.sleep(random.uniform(2, 2.5))
+            await asyncio.sleep(random.uniform(1.5 , 2.5))
 
             # 😴 HAR 10 USERDAN KEYIN (MAX 10s)
             if i % 10 == 9:
