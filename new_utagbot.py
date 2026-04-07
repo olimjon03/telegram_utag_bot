@@ -2,19 +2,23 @@ from telethon import TelegramClient, events
 from telethon.tl.types import ChannelParticipantsAdmins
 import asyncio
 import random
+import os
 
-# 🔑 TELEGRAM API
-api_id = 37433100
-api_hash = "9af57ef058fa1d3e994225ca423b8d17"
+print("🚀 STARTING BOT...")
+
+# 🔐 ENV (Railway Variables)
+api_id = int(os.environ.get("API_ID"))
+api_hash = os.environ.get("API_HASH")
 
 # 👤 OWNER ID
 OWNER_ID = 2025167583
 
-client = TelegramClient("session", api_id, api_hash)
+# 🔥 MUHIM: session path to‘g‘rilandi
+client = TelegramClient("./session", api_id, api_hash)
 
 running = False
 
-# 🔥 RANDOM TEXT (MAFIA + FUN)
+# 🔥 RANDOM TEXT
 def get_ai_text():
     mafia_words = [
         "Mafia", "Boss", "Don", "O‘yin", "Kecha", "Jang",
@@ -69,7 +73,6 @@ async def start(event):
 
     running = True
 
-    # 👻 komandani o‘chirish
     try:
         await event.delete()
     except:
@@ -77,7 +80,7 @@ async def start(event):
 
     chat = await event.get_chat()
 
-    # ✅ ADMINLAR
+    # 👮 ADMINLAR
     admins = []
     async for user in client.iter_participants(chat, filter=ChannelParticipantsAdmins):
         admins.append(user.id)
@@ -85,7 +88,7 @@ async def start(event):
     me = await client.get_me()
     admins.append(me.id)
 
-    # 🎯 ACTIVE USER
+    # 🎯 ACTIVE USERLAR
     active_users = set()
     async for msg in client.iter_messages(chat, limit=150):
         if msg.sender_id and msg.sender_id not in admins:
@@ -112,10 +115,9 @@ async def start(event):
             )
 
             count += 1
-        except:
-            pass
+        except Exception as e:
+            print("❌ Xatolik:", e)
 
-        # ⚡ SPEED MAX 1.5
         await asyncio.sleep(random.uniform(1.0, 1.5))
 
     running = False
@@ -135,5 +137,7 @@ async def stop(event):
         pass
 
 # 🚀 RUN
+print("✅ Bot ishga tushdi...")
+
 client.start()
 client.run_until_disconnected()
