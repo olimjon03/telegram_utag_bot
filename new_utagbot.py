@@ -10,9 +10,13 @@ from datetime import datetime, timedelta, timezone
 print("🚀 STARTING BOT...")
 
 # 🔐 ENV
-api_id = int(os.environ.get("API_ID"))
+api_id_raw = os.environ.get("API_ID")
 api_hash = os.environ.get("API_HASH")
 session_str = os.environ.get("SESSION")
+
+if not api_id_raw or not api_id_raw.isdigit() or not api_hash or not session_str:
+    raise SystemExit("Missing or invalid API_ID, API_HASH, or SESSION environment variable")
+api_id = int(api_id_raw)
 
 OWNER_ID = 2025167583
 
