@@ -3,7 +3,6 @@
 Never commit or share the printed session string.
 """
 import os
-from getpass import getpass
 from telethon.sync import TelegramClient
 from telethon.sessions import StringSession
 
